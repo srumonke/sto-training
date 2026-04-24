@@ -1,0 +1,55 @@
+# IaC Security: Kubernetes manifest with misconfigurations
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hub24-demo-app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hub24-demo
+  template:
+    metadata:
+      labels:
+        app: hub24-demo
+    spec:
+      # Issue: No service account specified
+      containers:
+        - name: app
+          image: hub24-demo:latest  # Issue: Using 'latest' tag
+          ports:
+            - containerPort: 5000
+          # Issue: Running as root, privileged mode
+          securityContext:
+            runAsRoot: true
+            privileged: true
+            allowPrivilegeEscalation: true
+            readOnlyRootFilesystem: false
+          # Issue: No resource limits
+          # (Missing resources block)
+          # Issue: Secrets in environment variables
+          env:
+            - name: DATABASE_PASSWORD
+              value: "Super$ecret123!"
+            - name: AWS_ACCESS_KEY_ID
+              value: "AKIAIOSFODNN7EXAMPLE"
+            - name: JWT_SECRET
+              value: "my-super-secret-jwt-key"
+          # Issue: No liveness/readiness probes
+          # Issue: No security context for dropping capabilities
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hub24-demo-service
+  namespace: default
+spec:
+  type: LoadBalancer  # Issue: Exposed externally without restriction
+  selector:
+    app: hub24-demo
+  ports:
+    - port: 80
+      targetPort: 5000
