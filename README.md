@@ -1,4 +1,4 @@
-# Hub24 STO Training - Demo Application
+# Hub24 STO Training - Demo Applicationtest
 
 A deliberately vulnerable Python Flask application for Harness STO hands-on training.
 
